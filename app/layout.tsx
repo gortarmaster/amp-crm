@@ -4,10 +4,10 @@ import BirthdayLoader from "@/components/BirthdayLoader";
 
 export const metadata: Metadata = {
   title: "A gift for Andres.",
-  description: "Your custom CRM — built from scratch, designed around the way you work.",
+  description: "Something was made for you. Open to find out.",
   openGraph: {
     title: "A gift for Andres.",
-    description: "Your custom CRM — built from scratch, designed around the way you work.",
+    description: "Something was made for you. Open to find out.",
   },
 };
 
