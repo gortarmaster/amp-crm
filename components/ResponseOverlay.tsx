@@ -66,7 +66,10 @@ export default function ResponseOverlay({ action }: Props) {
 
         {action === "decline" && (
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              sessionStorage.setItem("skipLoader", "1");
+              window.location.reload();
+            }}
             className="mt-2 text-caption text-ink-muted underline-offset-4 hover:underline hover:text-ink-secondary transition-colors"
           >
             Actually... wait. Let me reconsider.

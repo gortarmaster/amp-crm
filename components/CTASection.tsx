@@ -27,7 +27,7 @@ export default function CTASection() {
 
   return (
     <>
-      <section className="relative flex min-h-[70vh] flex-col items-center justify-center px-6 py-24 text-center">
+      <section className="relative flex min-h-[70vh] flex-col items-center justify-center px-6 py-24 text-center snap-start">
         {/* Ambient glow */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold/4 blur-[100px]" />

@@ -91,7 +91,7 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       {/* Hero */}
-      <section className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center">
+      <section className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center snap-start snap-always">
         {/* Ambient glow */}
         <div
           className="pointer-events-none absolute inset-0 overflow-hidden"
@@ -141,7 +141,7 @@ export default function Home() {
       </section>
 
       {/* Features */}
-      <section className="mx-auto max-w-6xl px-6 py-24">
+      <section className="mx-auto max-w-6xl px-6 py-24 snap-start">
         <div className="mb-16 text-center">
           <p className="text-caption uppercase tracking-widest text-ink-muted">Everything you need</p>
           <h2 className="mt-3 text-display-2 text-ink-primary">Six&nbsp;features. Zero&nbsp;fluff.</h2>
