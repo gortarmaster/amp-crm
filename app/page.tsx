@@ -1,4 +1,5 @@
 import CTASection from "@/components/CTASection";
+import BirthdayLoader from "@/components/BirthdayLoader";
 
 const features = [
   {
@@ -89,6 +90,8 @@ const features = [
 
 export default function Home() {
   return (
+    <>
+    <BirthdayLoader />
     <main className="min-h-screen">
       {/* Hero */}
       <section className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center snap-start snap-always">
@@ -182,5 +185,6 @@ export default function Home() {
         Made with care, by Aaron.
       </footer>
     </main>
+    </>
   );
 }
