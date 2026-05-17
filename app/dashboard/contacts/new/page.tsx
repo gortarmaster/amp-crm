@@ -1,20 +1,22 @@
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
-import { getUser } from '@/lib/supabase/auth'
+import { requireUser } from '@/lib/supabase/auth'
 import { createServerClient } from '@/lib/supabase/server'
 import { createContact } from '../actions'
 
 export default async function NewContactPage() {
-  const user = await getUser()
-  if (!user) redirect('/login')
+  const user = await requireUser()
 
-  const supabase = createServerClient()
-  const { data: companies } = await supabase
-    .from('companies')
-    .select('id, name')
-    .eq('user_id', user.id)
-    .order('name')
+  let companies: { id: string; name: string }[] = []
+  if (user) {
+    const supabase = createServerClient()
+    const { data } = await supabase
+      .from('companies')
+      .select('id, name')
+      .eq('user_id', user.id)
+      .order('name')
+    companies = data ?? []
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-8 py-8">
@@ -47,7 +49,7 @@ export default async function NewContactPage() {
             className="w-full rounded-token-md border border-line bg-bg-card px-3 py-2.5 text-caption text-ink-primary transition-colors focus:border-gold/40 focus:outline-none focus:ring-1 focus:ring-gold/20"
           >
             <option value="">No company</option>
-            {companies?.map((c) => (
+            {companies.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>

@@ -1,7 +1,6 @@
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, Search, Users } from 'lucide-react'
-import { getUser } from '@/lib/supabase/auth'
+import { requireUser } from '@/lib/supabase/auth'
 import { createServerClient } from '@/lib/supabase/server'
 import type { ContactWithCompany } from '@/lib/supabase/database.types'
 
@@ -10,28 +9,32 @@ interface Props {
 }
 
 export default async function ContactsPage({ searchParams }: Props) {
-  const user = await getUser()
-  if (!user) redirect('/login')
+  const user = await requireUser()
 
   const { q: rawQ } = await searchParams
   const q = rawQ?.trim() ?? ''
 
-  const supabase = createServerClient()
+  let contacts: ContactWithCompany[] = []
 
-  let query = supabase
-    .from('contacts')
-    .select('*, companies(id, name)')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+  if (user) {
+    const supabase = createServerClient()
 
-  if (q) {
-    query = query.or(
-      `first_name.ilike.%${q}%,last_name.ilike.%${q}%,email.ilike.%${q}%`
-    )
+    let query = supabase
+      .from('contacts')
+      .select('*, companies(id, name)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (q) {
+      query = query.or(
+        `first_name.ilike.%${q}%,last_name.ilike.%${q}%,email.ilike.%${q}%`
+      )
+    }
+
+    const { data, error } = await query.returns<ContactWithCompany[]>()
+    if (error) throw error
+    contacts = data ?? []
   }
-
-  const { data: contacts, error } = await query.returns<ContactWithCompany[]>()
-  if (error) throw error
 
   return (
     <div className="flex h-full flex-col">
@@ -40,8 +43,8 @@ export default async function ContactsPage({ searchParams }: Props) {
         <div>
           <h1 className="text-heading text-ink-primary">Contacts</h1>
           <p className="mt-0.5 text-caption text-ink-muted">
-            {contacts?.length ?? 0}{' '}
-            {contacts?.length === 1 ? 'contact' : 'contacts'}
+            {contacts.length}{' '}
+            {contacts.length === 1 ? 'contact' : 'contacts'}
           </p>
         </div>
         <Link
@@ -73,7 +76,7 @@ export default async function ContactsPage({ searchParams }: Props) {
 
       {/* Table */}
       <div className="flex-1 overflow-y-auto px-8 py-4">
-        {contacts && contacts.length > 0 ? (
+        {contacts.length > 0 ? (
           <table className="w-full">
             <thead>
               <tr className="border-b border-line">

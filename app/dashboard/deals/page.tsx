@@ -1,11 +1,6 @@
-import { redirect } from 'next/navigation'
 import { TrendingUp } from 'lucide-react'
-import { getUser } from '@/lib/supabase/auth'
 
-export default async function DealsPage() {
-  const user = await getUser()
-  if (!user) redirect('/login')
-
+export default function DealsPage() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
       <div className="rounded-token-lg border border-line bg-bg-card p-5 text-ink-muted">

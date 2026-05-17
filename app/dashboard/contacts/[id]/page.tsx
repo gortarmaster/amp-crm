@@ -1,7 +1,7 @@
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
-import { getUser } from '@/lib/supabase/auth'
+import { requireUser } from '@/lib/supabase/auth'
 import { createServerClient } from '@/lib/supabase/server'
 import type { ContactWithCompany } from '@/lib/supabase/database.types'
 import ContactDetail from './ContactDetail'
@@ -11,10 +11,11 @@ interface Props {
 }
 
 export default async function ContactPage({ params }: Props) {
-  const user = await getUser()
-  if (!user) redirect('/login')
-
+  const user = await requireUser()
   const { id } = await params
+
+  if (!user) notFound()
+
   const supabase = createServerClient()
 
   const { data: contact } = await supabase

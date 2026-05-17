@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import type { Database } from './database.types'
 
 /**
@@ -33,5 +34,17 @@ export async function getUser() {
 
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) return null
+  return user
+}
+
+/**
+ * Like getUser(), but also redirects to /login if unauthenticated.
+ * On non-production deployments (preview / local), skips auth entirely and returns null.
+ * Pages should skip data-fetching when the return value is null.
+ */
+export async function requireUser() {
+  if (process.env.VERCEL_ENV !== 'production') return null
+  const user = await getUser()
+  if (!user) redirect('/login')
   return user
 }
