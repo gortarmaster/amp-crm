@@ -9,6 +9,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Auth is production-only — skip on preview deployments and local dev
+  if (process.env.VERCEL_ENV !== 'production') {
+    return NextResponse.next()
+  }
+
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
