@@ -42,9 +42,8 @@ export default function MobileNav({ userEmail, userName, userAvatar }: Props) {
     <>
       {/* Top bar — mobile only */}
       <header className="flex items-center justify-between border-b border-line bg-bg-subtle px-5 py-4 md:hidden">
-        <span className="text-caption font-semibold tracking-[0.15em] uppercase text-gold">
-          amp-crm
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-light.svg" alt="AM" className="h-6 w-auto" />
 
         {/* Hamburger / close button */}
         <button
@@ -80,9 +79,8 @@ export default function MobileNav({ userEmail, userName, userAvatar }: Props) {
       >
         {/* Overlay top bar */}
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
-          <span className="text-caption font-semibold tracking-[0.15em] uppercase text-gold">
-            amp-crm
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-light.svg" alt="AM" className="h-6 w-auto" />
           <button
             onClick={() => setOpen(false)}
             aria-label="Close menu"

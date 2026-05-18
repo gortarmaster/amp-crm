@@ -36,5 +36,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=oauth_failed`)
   }
 
-  return NextResponse.redirect(`${origin}/dashboard/contacts`)
+  // Support ?next= for redirecting to specific routes (e.g. /intake?resume=1)
+  const next = searchParams.get('next')
+  const destination = next && next.startsWith('/') ? next : '/dashboard/contacts'
+  return NextResponse.redirect(`${origin}${destination}`)
 }

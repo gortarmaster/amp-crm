@@ -24,11 +24,10 @@ export default function Sidebar({ userEmail, userName, userAvatar }: Props) {
 
   return (
     <aside className="flex h-full w-56 flex-shrink-0 flex-col border-r border-line bg-bg-subtle">
-      {/* Wordmark */}
+      {/* Logo */}
       <div className="flex h-14 items-center border-b border-line px-5">
-        <span className="text-caption font-semibold tracking-[0.15em] uppercase text-gold">
-          amp-crm
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-light.svg" alt="AM" className="h-7 w-auto" />
       </div>
 
       {/* Nav */}
