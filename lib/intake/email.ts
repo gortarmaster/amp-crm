@@ -44,7 +44,6 @@ export function formatIntakeEmail(s: IntakeSubmission): { subject: string; html:
 
   const body = `
     ${section('Home Base', '🌐',
-      row('Website URL', s.website_url) +
       row('Website host', s.website_host === 'Other' ? `Other — ${s.website_host_other}` : s.website_host) +
       row('Domain registrar', s.domain_registrar === 'Other' ? `Other — ${s.domain_registrar_other}` : s.domain_registrar) +
       row('Email provider', s.email_provider)

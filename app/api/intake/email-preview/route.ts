@@ -15,7 +15,7 @@ const SAMPLE: IntakeSubmission = {
   completed_chapters: 5,
 
   // Chapter 1
-  website_url: 'https://andresmorales.photo',
+  website_url: null,
   website_host: 'Squarespace',
   website_host_other: null,
   domain_registrar: 'GoDaddy',
@@ -47,7 +47,7 @@ const SAMPLE: IntakeSubmission = {
   // Chapter 5
   biggest_gap: 'Following up on leads',
   biggest_gap_other: null,
-  tool_id_never_give_up: 'Lightroom — my whole editing workflow lives there, I can\'t function without it.',
+  tool_id_never_give_up: 'HoneyBook — everything lives there, contracts, invoices, client communication.',
   one_thing_to_fix: 'Following up with leads who go cold. I\'ll respond to an inquiry, then never hear back, and I forget to follow up a week later. I\'ve definitely lost bookings because of this.',
   anything_else: 'I shoot mostly commercial and events. Weddings are maybe 20% of my work. Would love something that helps me track which leads are actually serious vs. just browsing.',
 }

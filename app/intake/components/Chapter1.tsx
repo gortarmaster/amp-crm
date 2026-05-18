@@ -44,15 +44,6 @@ export default function Chapter1({ answers, onChange }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <Label>What&apos;s your website URL?</Label>
-        <TextInput
-          value={answers.website_url ?? ''}
-          onChange={(v) => onChange({ website_url: v })}
-          placeholder="https://yoursite.com"
-        />
-      </div>
-
-      <div>
         <Label>Who hosts your website?</Label>
         <Select
           value={answers.website_host ?? ''}

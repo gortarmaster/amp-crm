@@ -40,7 +40,6 @@ export default function SummaryScreen({ answers, onSubmit, submitting }: Props) 
 
         <div className="space-y-4">
           <Section title="Home Base" emoji="🌐">
-            <Row label="Website" value={answers.website_url} />
             <Row label="Host" value={answers.website_host === 'Other' ? `Other — ${answers.website_host_other}` : answers.website_host} />
             <Row label="Registrar" value={answers.domain_registrar === 'Other' ? `Other — ${answers.domain_registrar_other}` : answers.domain_registrar} />
             <Row label="Email" value={answers.email_provider} />

@@ -86,7 +86,7 @@ export default function Chapter5({ answers, onChange }: Props) {
         <Textarea
           value={answers.tool_id_never_give_up ?? ''}
           onChange={(v) => onChange({ tool_id_never_give_up: v })}
-          placeholder="e.g. Lightroom, HoneyBook, my Notes app…"
+          placeholder="e.g. HoneyBook, Acuity, my Notes app…"
         />
       </div>
 
