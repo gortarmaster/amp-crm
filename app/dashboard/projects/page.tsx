@@ -1,11 +1,14 @@
 import Link from 'next/link'
-import { Plus, Search, FolderOpen, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import { requireUser } from '@/lib/supabase/auth'
 import { createServerClient } from '@/lib/supabase/server'
-import ProjectStatusBadge from '@/components/dashboard/ProjectStatusBadge'
-import type { ProjectWithCompany, ProjectStatus } from '@/lib/supabase/database.types'
+import type { ProjectWithCompany, ProjectStatus, SavedView } from '@/lib/supabase/database.types'
+import { decodeFilters, applyFilters, PROJECT_FILTER_FIELDS } from '@/lib/filters'
+import FilterBar from '@/components/dashboard/FilterBar'
+import SavedViewsBar from '@/components/dashboard/SavedViewsBar'
+import ProjectsView from './ProjectsView'
 
-type SortCol = 'title' | 'status' | 'company' | 'shoot_date' | 'value'
+type SortCol = 'title' | 'status' | 'company' | 'shoot_date' | 'delivery_date' | 'value' | 'category' | 'location'
 type SortDir = 'asc' | 'desc'
 
 const STATUS_ORDER: Record<ProjectStatus, number> = {
@@ -13,9 +16,8 @@ const STATUS_ORDER: Record<ProjectStatus, number> = {
 }
 
 const DB_SORT: Partial<Record<SortCol, string>> = {
-  title: 'title',
-  shoot_date: 'shoot_date',
-  value: 'deal_value',
+  title: 'title', shoot_date: 'shoot_date', delivery_date: 'delivery_date',
+  value: 'deal_value', category: 'category', location: 'location',
 }
 
 const STATUS_TABS: { label: string; value: string }[] = [
@@ -28,23 +30,32 @@ const STATUS_TABS: { label: string; value: string }[] = [
 ]
 
 interface Props {
-  searchParams: Promise<{ q?: string; status?: string; sort?: string; dir?: string }>
+  searchParams: Promise<{ q?: string; status?: string; sort?: string; dir?: string; filters?: string; view_id?: string }>
 }
 
 export default async function ProjectsPage({ searchParams }: Props) {
   const user = await requireUser()
-  const { q: rawQ, status: rawStatus, sort: rawSort, dir: rawDir } = await searchParams
+  const { q: rawQ, status: rawStatus, sort: rawSort, dir: rawDir, filters: rawFilters, view_id } = await searchParams
   const q = rawQ?.trim() ?? ''
   const status = rawStatus?.trim() ?? ''
-  const sort: SortCol = (['title', 'status', 'company', 'shoot_date', 'value'] as SortCol[]).includes(rawSort as SortCol)
-    ? (rawSort as SortCol)
-    : 'shoot_date'
+  const sort: SortCol = (['title','status','company','shoot_date','delivery_date','value','category','location'] as SortCol[]).includes(rawSort as SortCol)
+    ? (rawSort as SortCol) : 'shoot_date'
   const dir: SortDir = rawDir === 'asc' ? 'asc' : 'desc'
+  const filterRules = decodeFilters(rawFilters)
 
   let projects: ProjectWithCompany[] = []
+  let savedViews: SavedView[] = []
 
   if (user) {
     const supabase = createServerClient()
+
+    const { data: views } = await supabase
+      .from('saved_views')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('object_type', 'projects')
+      .order('created_at')
+    savedViews = (views ?? []) as SavedView[]
 
     let query = supabase
       .from('projects')
@@ -53,6 +64,7 @@ export default async function ProjectsPage({ searchParams }: Props) {
 
     if (status) query = query.eq('status', status as ProjectStatus)
     if (q) query = query.or(`title.ilike.%${q}%,location.ilike.%${q}%,category.ilike.%${q}%`)
+    query = applyFilters(query, filterRules)
 
     const dbCol = DB_SORT[sort]
     if (dbCol) {
@@ -82,32 +94,6 @@ export default async function ProjectsPage({ searchParams }: Props) {
     }
   }
 
-  function headerLink(col: SortCol) {
-    const active = sort === col
-    const nextDir = active && dir === 'desc' ? 'asc' : 'desc'
-    const params = new URLSearchParams()
-    if (q) params.set('q', q)
-    if (status) params.set('status', status)
-    params.set('sort', col)
-    params.set('dir', nextDir)
-    return `/dashboard/projects?${params.toString()}`
-  }
-
-  function SortIcon({ col }: { col: SortCol }) {
-    if (sort !== col) return <ChevronsUpDown size={12} className="ml-1 inline text-ink-muted/40" />
-    return dir === 'asc'
-      ? <ChevronUp size={12} className="ml-1 inline text-gold" />
-      : <ChevronDown size={12} className="ml-1 inline text-gold" />
-  }
-
-  const COLS: { label: string; col: SortCol }[] = [
-    { label: 'Title', col: 'title' },
-    { label: 'Status', col: 'status' },
-    { label: 'Company', col: 'company' },
-    { label: 'Shoot Date', col: 'shoot_date' },
-    { label: 'Value', col: 'value' },
-  ]
-
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
@@ -128,6 +114,15 @@ export default async function ProjectsPage({ searchParams }: Props) {
         </Link>
       </div>
 
+      {/* Saved views */}
+      <SavedViewsBar
+        savedViews={savedViews}
+        activeViewId={view_id}
+        objectType="projects"
+        objectPath="/dashboard/projects"
+        allLabel="All Projects"
+      />
+
       {/* Status filter tabs */}
       <div className="flex items-center gap-1 border-b border-line px-8 py-0">
         {STATUS_TABS.map((tab) => {
@@ -137,15 +132,14 @@ export default async function ProjectsPage({ searchParams }: Props) {
           if (q) params.set('q', q)
           if (sort !== 'shoot_date') params.set('sort', sort)
           if (dir !== 'desc') params.set('dir', dir)
+          if (rawFilters) params.set('filters', rawFilters)
           const href = `/dashboard/projects${params.size > 0 ? `?${params}` : ''}`
           return (
             <Link
               key={tab.value}
               href={href}
               className={`-mb-px border-b-2 px-3 py-3 text-caption font-medium transition-colors ${
-                isActive
-                  ? 'border-gold text-gold'
-                  : 'border-transparent text-ink-muted hover:text-ink-secondary'
+                isActive ? 'border-gold text-gold' : 'border-transparent text-ink-muted hover:text-ink-secondary'
               }`}
             >
               {tab.label}
@@ -160,11 +154,9 @@ export default async function ProjectsPage({ searchParams }: Props) {
           {status && <input type="hidden" name="status" value={status} />}
           {sort !== 'shoot_date' && <input type="hidden" name="sort" value={sort} />}
           {dir !== 'desc' && <input type="hidden" name="dir" value={dir} />}
+          {rawFilters && <input type="hidden" name="filters" value={rawFilters} />}
           <div className="relative max-w-sm">
-            <Search
-              size={14}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
-            />
+            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
             <input
               name="q"
               defaultValue={q}
@@ -175,103 +167,12 @@ export default async function ProjectsPage({ searchParams }: Props) {
         </form>
       </div>
 
-      {/* Table */}
-      <div className="flex-1 overflow-y-auto px-8 py-4">
-        {projects.length > 0 ? (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-line">
-                {COLS.map(({ label, col }) => (
-                  <th key={col} className="pb-3 text-left text-caption font-medium text-ink-muted">
-                    <Link
-                      href={headerLink(col)}
-                      className="inline-flex items-center transition-colors hover:text-ink-primary"
-                    >
-                      {label}
-                      <SortIcon col={col} />
-                    </Link>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line/50">
-              {projects.map((project) => (
-                <tr key={project.id} className="group transition-colors hover:bg-bg-hover/40">
-                  <td className="py-3 pr-4">
-                    <Link
-                      href={`/dashboard/projects/${project.id}`}
-                      className="text-caption font-medium text-ink-primary transition-colors hover:text-gold"
-                    >
-                      {project.title}
-                    </Link>
-                    {project.location && (
-                      <p className="mt-0.5 text-ink-muted" style={{ fontSize: '11px' }}>
-                        {project.location}
-                      </p>
-                    )}
-                  </td>
-                  <td className="py-3 pr-4">
-                    <ProjectStatusBadge status={project.status} />
-                  </td>
-                  <td className="py-3 pr-4">
-                    {project.companies ? (
-                      <Link
-                        href={`/dashboard/companies/${project.company_id}`}
-                        className="text-caption text-ink-secondary transition-colors hover:text-gold"
-                      >
-                        {project.companies.name}
-                      </Link>
-                    ) : (
-                      <span className="text-caption text-ink-secondary">—</span>
-                    )}
-                  </td>
-                  <td className="py-3 pr-4">
-                    <span className="text-caption text-ink-secondary">
-                      {project.shoot_date
-                        ? new Date(project.shoot_date).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                            timeZone: 'UTC',
-                          })
-                        : '—'}
-                    </span>
-                  </td>
-                  <td className="py-3">
-                    <span className="text-caption text-ink-secondary">
-                      {project.deal_value != null
-                        ? `$${project.deal_value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
-                        : '—'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="mb-4 rounded-token-lg border border-line bg-bg-card p-4 text-ink-muted">
-              <FolderOpen size={24} strokeWidth={1.5} />
-            </div>
-            <p className="text-body font-medium text-ink-primary">
-              {q ? 'No projects match your search' : 'No projects yet'}
-            </p>
-            <p className="mt-1 text-caption text-ink-muted">
-              {q
-                ? 'Try a different search term'
-                : 'Create your first project to get started'}
-            </p>
-            {!q && (
-              <Link
-                href="/dashboard/projects/new"
-                className="mt-4 inline-flex items-center gap-2 rounded-token-md border border-gold/30 px-4 py-2 text-caption font-medium text-gold transition-colors hover:bg-gold/5"
-              >
-                <Plus size={14} />
-                New Project
-              </Link>
-            )}
-          </div>
-        )}
+      {/* Filter bar */}
+      <FilterBar fields={PROJECT_FILTER_FIELDS} filtersEncoded={rawFilters ?? ''} />
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        <ProjectsView projects={projects} q={q} filterCount={filterRules.length} />
       </div>
     </div>
   )

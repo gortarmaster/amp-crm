@@ -6,7 +6,9 @@
       "Bash(git push *)",
       "Bash(npm run *)",
       "Bash(npx tsc *)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(node scripts/_dedup-companies.mjs)",
+      "Bash(grep -v \"^$\")"
     ]
   }
 }

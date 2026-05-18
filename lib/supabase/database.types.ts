@@ -167,6 +167,37 @@ export interface Database {
         }
         Relationships: []
       }
+      saved_views: {
+        Row: {
+          id: string
+          user_id: string
+          object_type: string
+          name: string
+          filters: import('./database.types').Json
+          columns: string[] | null
+          sort_col: string | null
+          sort_dir: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          object_type: string
+          name: string
+          filters?: import('./database.types').Json
+          columns?: string[] | null
+          sort_col?: string | null
+          sort_dir?: string | null
+        }
+        Update: {
+          name?: string
+          filters?: import('./database.types').Json
+          columns?: string[] | null
+          sort_col?: string | null
+          sort_dir?: string | null
+        }
+        Relationships: []
+      }
       project_sources: {
         Row: {
           id: string
@@ -283,6 +314,18 @@ export type ProjectSource = {
   project_id: string
   label: string
   url: string | null
+  created_at: string
+}
+
+export type SavedView = {
+  id: string
+  user_id: string
+  object_type: string
+  name: string
+  filters: Json
+  columns: string[] | null
+  sort_col: string | null
+  sort_dir: string | null
   created_at: string
 }
 
