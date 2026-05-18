@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { requireUser } from '@/lib/supabase/auth'
 import { createServerClient } from '@/lib/supabase/server'
-import type { Company, Contact } from '@/lib/supabase/database.types'
+import type { Company, Contact, Project } from '@/lib/supabase/database.types'
 import CompanyDetail from './CompanyDetail'
 
 interface Props {
@@ -27,12 +27,20 @@ export default async function CompanyPage({ params }: Props) {
 
   if (!company) notFound()
 
-  const { data: contacts } = await supabase
-    .from('contacts')
-    .select('id, first_name, last_name, title, email')
-    .eq('company_id', id)
-    .eq('user_id', user.id)
-    .order('last_name')
+  const [{ data: contacts }, { data: projects }] = await Promise.all([
+    supabase
+      .from('contacts')
+      .select('id, first_name, last_name, title, email')
+      .eq('company_id', id)
+      .eq('user_id', user!.id)
+      .order('last_name'),
+    supabase
+      .from('projects')
+      .select('id, title, status, shoot_date')
+      .eq('company_id', id)
+      .eq('user_id', user!.id)
+      .order('created_at', { ascending: false }),
+  ])
 
   return (
     <div className="flex h-full flex-col">
@@ -57,6 +65,7 @@ export default async function CompanyPage({ params }: Props) {
       <CompanyDetail
         company={company as Company}
         contacts={(contacts ?? []) as Pick<Contact, 'id' | 'first_name' | 'last_name' | 'title' | 'email'>[]}
+        projects={(projects ?? []) as Pick<Project, 'id' | 'title' | 'status' | 'shoot_date'>[]}
       />
     </div>
   )

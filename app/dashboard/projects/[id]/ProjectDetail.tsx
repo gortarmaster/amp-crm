@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Link from 'next/link'
 import { Edit2, Trash2, Users, X, MapPin, Tag, DollarSign, Calendar, ExternalLink } from 'lucide-react'
 import {
   updateProject,
@@ -246,7 +247,19 @@ export default function ProjectDetail({ project, companies, allContacts }: Props
               }
             />
             {project.companies && (
-              <InfoRow label="Company" value={project.companies.name} />
+              <div className="flex gap-3">
+                <div>
+                  <dt style={{ fontSize: '11px' }} className="text-ink-muted">Company</dt>
+                  <dd className="mt-0.5 text-caption text-ink-primary">
+                    <Link
+                      href={`/dashboard/companies/${project.company_id}`}
+                      className="transition-colors hover:text-gold"
+                    >
+                      {project.companies.name}
+                    </Link>
+                  </dd>
+                </div>
+              </div>
             )}
           </dl>
         )}

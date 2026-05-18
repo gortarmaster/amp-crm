@@ -2,16 +2,18 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
-import { Edit2, Trash2, Globe, Users } from 'lucide-react'
+import { Edit2, Trash2, Globe, Users, FolderOpen } from 'lucide-react'
 import { updateCompany, deleteCompany } from '../actions'
-import type { Company, Contact } from '@/lib/supabase/database.types'
+import ProjectStatusBadge from '@/components/dashboard/ProjectStatusBadge'
+import type { Company, Contact, Project, ProjectStatus } from '@/lib/supabase/database.types'
 
 interface Props {
   company: Company
   contacts: Pick<Contact, 'id' | 'first_name' | 'last_name' | 'title' | 'email'>[]
+  projects: Pick<Project, 'id' | 'title' | 'status' | 'shoot_date'>[]
 }
 
-export default function CompanyDetail({ company, contacts }: Props) {
+export default function CompanyDetail({ company, contacts, projects }: Props) {
   const [editing, setEditing] = useState(false)
   const [isPending, startTransition] = useTransition()
 
@@ -151,6 +153,41 @@ export default function CompanyDetail({ company, contacts }: Props) {
             <div className="flex flex-col items-center gap-2 py-8 text-center">
               <Users size={18} strokeWidth={1.5} className="text-ink-muted" />
               <p className="text-caption text-ink-muted">No contacts yet</p>
+            </div>
+          )}
+        </div>
+
+        {/* Projects at this company */}
+        <div className="mt-10">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-caption font-semibold uppercase tracking-widest text-ink-muted">
+              Projects
+            </h2>
+            <Link
+              href="/dashboard/projects/new"
+              className="text-caption text-ink-muted transition-colors hover:text-gold"
+            >
+              + Add
+            </Link>
+          </div>
+
+          {projects.length > 0 ? (
+            <div className="space-y-1">
+              {projects.map((project) => (
+                <Link
+                  key={project.id}
+                  href={`/dashboard/projects/${project.id}`}
+                  className="flex items-center justify-between rounded-token-md px-3 py-2.5 transition-colors hover:bg-bg-hover/60"
+                >
+                  <p className="text-caption font-medium text-ink-primary">{project.title}</p>
+                  <ProjectStatusBadge status={project.status as ProjectStatus} />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2 py-8 text-center">
+              <FolderOpen size={18} strokeWidth={1.5} className="text-ink-muted" />
+              <p className="text-caption text-ink-muted">No projects yet</p>
             </div>
           )}
         </div>

@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { requireUser } from '@/lib/supabase/auth'
 import { createServerClient } from '@/lib/supabase/server'
-import type { ContactWithCompany } from '@/lib/supabase/database.types'
+import type { ContactWithCompany, Project } from '@/lib/supabase/database.types'
 import ContactDetail from './ContactDetail'
 
 interface Props {
@@ -27,11 +27,21 @@ export default async function ContactPage({ params }: Props) {
 
   if (!contact) notFound()
 
-  const { data: companies } = await supabase
-    .from('companies')
-    .select('id, name')
-    .eq('user_id', user.id)
-    .order('name')
+  const [{ data: companies }, { data: pcRows }] = await Promise.all([
+    supabase.from('companies').select('id, name').eq('user_id', user.id).order('name'),
+    supabase.from('project_contacts').select('project_id').eq('contact_id', id),
+  ])
+
+  const projectIds = (pcRows ?? []).map((r) => r.project_id)
+  const { data: projects } =
+    projectIds.length > 0
+      ? await supabase
+          .from('projects')
+          .select('id, title, status, shoot_date')
+          .in('id', projectIds)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+      : { data: [] }
 
   return (
     <div className="flex h-full flex-col">
@@ -59,6 +69,7 @@ export default async function ContactPage({ params }: Props) {
       <ContactDetail
         contact={contact as ContactWithCompany}
         companies={companies ?? []}
+        projects={(projects ?? []) as Pick<Project, 'id' | 'title' | 'status' | 'shoot_date'>[]}
       />
     </div>
   )

@@ -1,16 +1,19 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Edit2, Trash2, Mail, Phone, Building2 } from 'lucide-react'
+import Link from 'next/link'
+import { Edit2, Trash2, Mail, Phone, Building2, FolderOpen } from 'lucide-react'
 import { updateContact, deleteContact } from '../actions'
-import type { ContactWithCompany, Company } from '@/lib/supabase/database.types'
+import ProjectStatusBadge from '@/components/dashboard/ProjectStatusBadge'
+import type { ContactWithCompany, Company, Project, ProjectStatus } from '@/lib/supabase/database.types'
 
 interface Props {
   contact: ContactWithCompany
   companies: Pick<Company, 'id' | 'name'>[]
+  projects: Pick<Project, 'id' | 'title' | 'status' | 'shoot_date'>[]
 }
 
-export default function ContactDetail({ contact, companies }: Props) {
+export default function ContactDetail({ contact, companies, projects }: Props) {
   const [editing, setEditing] = useState(false)
   const [isPending, startTransition] = useTransition()
 
@@ -121,7 +124,22 @@ export default function ContactDetail({ contact, companies }: Props) {
           <dl className="space-y-5">
             <InfoRow icon={Mail} label="Email" value={contact.email} href={contact.email ? `mailto:${contact.email}` : undefined} />
             <InfoRow icon={Phone} label="Phone" value={contact.phone} href={contact.phone ? `tel:${contact.phone}` : undefined} />
-            <InfoRow icon={Building2} label="Company" value={contact.companies?.name ?? null} />
+            {contact.companies && (
+              <div className="flex gap-3">
+                <Building2 size={14} strokeWidth={1.5} className="mt-0.5 flex-shrink-0 text-ink-muted" />
+                <div>
+                  <dt style={{ fontSize: '11px' }} className="text-ink-muted">Company</dt>
+                  <dd className="mt-0.5 text-caption text-ink-primary">
+                    <Link
+                      href={`/dashboard/companies/${contact.company_id}`}
+                      className="transition-colors hover:text-gold"
+                    >
+                      {contact.companies.name}
+                    </Link>
+                  </dd>
+                </div>
+              </div>
+            )}
             <InfoRow label="Title" value={contact.title} />
             {contact.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
@@ -137,6 +155,32 @@ export default function ContactDetail({ contact, companies }: Props) {
             )}
           </dl>
         )}
+
+        {/* Projects this contact is on */}
+        <div className="mt-10">
+          <h2 className="mb-4 text-caption font-semibold uppercase tracking-widest text-ink-muted">
+            Projects
+          </h2>
+          {projects.length > 0 ? (
+            <div className="space-y-1">
+              {projects.map((project) => (
+                <Link
+                  key={project.id}
+                  href={`/dashboard/projects/${project.id}`}
+                  className="flex items-center justify-between rounded-token-md px-3 py-2.5 transition-colors hover:bg-bg-hover/60"
+                >
+                  <p className="text-caption font-medium text-ink-primary">{project.title}</p>
+                  <ProjectStatusBadge status={project.status as ProjectStatus} />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2 py-8 text-center">
+              <FolderOpen size={18} strokeWidth={1.5} className="text-ink-muted" />
+              <p className="text-caption text-ink-muted">No projects yet</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Right — notes + metadata */}
