@@ -1,18 +1,32 @@
 import Link from 'next/link'
-import { Plus, Search, Users } from 'lucide-react'
+import { Plus, Search, Users, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { requireUser } from '@/lib/supabase/auth'
 import { createServerClient } from '@/lib/supabase/server'
 import type { ContactWithCompany } from '@/lib/supabase/database.types'
 
+type SortCol = 'name' | 'email' | 'company' | 'title' | 'added'
+type SortDir = 'asc' | 'desc'
+
+const DB_SORT: Record<Exclude<SortCol, 'company'>, string> = {
+  name: 'last_name',
+  email: 'email',
+  title: 'title',
+  added: 'created_at',
+}
+
 interface Props {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; sort?: string; dir?: string }>
 }
 
 export default async function ContactsPage({ searchParams }: Props) {
   const user = await requireUser()
 
-  const { q: rawQ } = await searchParams
+  const { q: rawQ, sort: rawSort, dir: rawDir } = await searchParams
   const q = rawQ?.trim() ?? ''
+  const sort: SortCol = (['name', 'email', 'company', 'title', 'added'] as SortCol[]).includes(rawSort as SortCol)
+    ? (rawSort as SortCol)
+    : 'added'
+  const dir: SortDir = rawDir === 'asc' ? 'asc' : 'desc'
 
   let contacts: ContactWithCompany[] = []
 
@@ -23,7 +37,6 @@ export default async function ContactsPage({ searchParams }: Props) {
       .from('contacts')
       .select('*, companies(id, name)')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
 
     if (q) {
       query = query.or(
@@ -31,10 +44,52 @@ export default async function ContactsPage({ searchParams }: Props) {
       )
     }
 
+    if (sort !== 'company') {
+      query = query.order(DB_SORT[sort], { ascending: dir === 'asc' })
+      if (sort === 'name') query = query.order('first_name', { ascending: dir === 'asc' })
+    } else {
+      query = query.order('last_name', { ascending: true })
+    }
+
     const { data, error } = await query.returns<ContactWithCompany[]>()
     if (error) throw error
-    contacts = data ?? []
+    const rows = data ?? []
+
+    if (sort === 'company') {
+      contacts = rows.sort((a, b) => {
+        const an = a.companies?.name ?? ''
+        const bn = b.companies?.name ?? ''
+        return dir === 'asc' ? an.localeCompare(bn) : bn.localeCompare(an)
+      })
+    } else {
+      contacts = rows
+    }
   }
+
+  function headerLink(col: SortCol) {
+    const active = sort === col
+    const nextDir = active && dir === 'asc' ? 'desc' : 'asc'
+    const params = new URLSearchParams()
+    if (q) params.set('q', q)
+    params.set('sort', col)
+    params.set('dir', nextDir)
+    return `/dashboard/contacts?${params.toString()}`
+  }
+
+  function SortIcon({ col }: { col: SortCol }) {
+    if (sort !== col) return <ChevronsUpDown size={12} className="ml-1 inline text-ink-muted/40" />
+    return dir === 'asc'
+      ? <ChevronUp size={12} className="ml-1 inline text-gold" />
+      : <ChevronDown size={12} className="ml-1 inline text-gold" />
+  }
+
+  const COLS: { label: string; col: SortCol }[] = [
+    { label: 'Name', col: 'name' },
+    { label: 'Email', col: 'email' },
+    { label: 'Company', col: 'company' },
+    { label: 'Title', col: 'title' },
+    { label: 'Added', col: 'added' },
+  ]
 
   return (
     <div className="flex h-full flex-col">
@@ -70,6 +125,8 @@ export default async function ContactsPage({ searchParams }: Props) {
               placeholder="Search by name or email…"
               className="w-full rounded-token-md border border-line bg-bg-card py-2 pl-9 pr-4 text-caption text-ink-primary placeholder:text-ink-muted transition-colors focus:border-gold/40 focus:outline-none focus:ring-1 focus:ring-gold/20"
             />
+            {sort !== 'added' && <input type="hidden" name="sort" value={sort} />}
+            {dir !== 'desc' && <input type="hidden" name="dir" value={dir} />}
           </div>
         </form>
       </div>
@@ -80,12 +137,15 @@ export default async function ContactsPage({ searchParams }: Props) {
           <table className="w-full">
             <thead>
               <tr className="border-b border-line">
-                {['Name', 'Email', 'Company', 'Title', 'Added'].map((col) => (
-                  <th
-                    key={col}
-                    className="pb-3 text-left text-caption font-medium text-ink-muted"
-                  >
-                    {col}
+                {COLS.map(({ label, col }) => (
+                  <th key={col} className="pb-3 text-left text-caption font-medium text-ink-muted">
+                    <Link
+                      href={headerLink(col)}
+                      className="inline-flex items-center transition-colors hover:text-ink-primary"
+                    >
+                      {label}
+                      <SortIcon col={col} />
+                    </Link>
                   </th>
                 ))}
               </tr>

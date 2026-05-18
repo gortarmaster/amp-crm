@@ -1,9 +1,22 @@
 import Link from 'next/link'
-import { Plus, Search, FolderOpen } from 'lucide-react'
+import { Plus, Search, FolderOpen, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { requireUser } from '@/lib/supabase/auth'
 import { createServerClient } from '@/lib/supabase/server'
 import ProjectStatusBadge from '@/components/dashboard/ProjectStatusBadge'
 import type { ProjectWithCompany, ProjectStatus } from '@/lib/supabase/database.types'
+
+type SortCol = 'title' | 'status' | 'company' | 'shoot_date' | 'value'
+type SortDir = 'asc' | 'desc'
+
+const STATUS_ORDER: Record<ProjectStatus, number> = {
+  lead: 0, booked: 1, shooting: 2, editing: 3, delivered: 4, archived: 5,
+}
+
+const DB_SORT: Partial<Record<SortCol, string>> = {
+  title: 'title',
+  shoot_date: 'shoot_date',
+  value: 'deal_value',
+}
 
 const STATUS_TABS: { label: string; value: string }[] = [
   { label: 'All', value: '' },
@@ -15,14 +28,18 @@ const STATUS_TABS: { label: string; value: string }[] = [
 ]
 
 interface Props {
-  searchParams: Promise<{ q?: string; status?: string }>
+  searchParams: Promise<{ q?: string; status?: string; sort?: string; dir?: string }>
 }
 
 export default async function ProjectsPage({ searchParams }: Props) {
   const user = await requireUser()
-  const { q: rawQ, status: rawStatus } = await searchParams
+  const { q: rawQ, status: rawStatus, sort: rawSort, dir: rawDir } = await searchParams
   const q = rawQ?.trim() ?? ''
   const status = rawStatus?.trim() ?? ''
+  const sort: SortCol = (['title', 'status', 'company', 'shoot_date', 'value'] as SortCol[]).includes(rawSort as SortCol)
+    ? (rawSort as SortCol)
+    : 'shoot_date'
+  const dir: SortDir = rawDir === 'asc' ? 'asc' : 'desc'
 
   let projects: ProjectWithCompany[] = []
 
@@ -33,20 +50,63 @@ export default async function ProjectsPage({ searchParams }: Props) {
       .from('projects')
       .select('*, companies(id, name)')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
 
-    if (status) {
-      query = query.eq('status', status as ProjectStatus)
-    }
+    if (status) query = query.eq('status', status as ProjectStatus)
+    if (q) query = query.or(`title.ilike.%${q}%,location.ilike.%${q}%,category.ilike.%${q}%`)
 
-    if (q) {
-      query = query.or(`title.ilike.%${q}%,location.ilike.%${q}%,category.ilike.%${q}%`)
+    const dbCol = DB_SORT[sort]
+    if (dbCol) {
+      query = query.order(dbCol, { ascending: dir === 'asc', nullsFirst: false })
+      if (dbCol !== 'title') query = query.order('title', { ascending: true })
+    } else {
+      query = query.order('shoot_date', { ascending: false, nullsFirst: false })
     }
 
     const { data, error } = await query.returns<ProjectWithCompany[]>()
     if (error) throw error
-    projects = data ?? []
+    const rows = data ?? []
+
+    if (sort === 'status') {
+      projects = rows.sort((a, b) => {
+        const diff = STATUS_ORDER[a.status] - STATUS_ORDER[b.status]
+        return dir === 'asc' ? diff : -diff
+      })
+    } else if (sort === 'company') {
+      projects = rows.sort((a, b) => {
+        const an = a.companies?.name ?? ''
+        const bn = b.companies?.name ?? ''
+        return dir === 'asc' ? an.localeCompare(bn) : bn.localeCompare(an)
+      })
+    } else {
+      projects = rows
+    }
   }
+
+  function headerLink(col: SortCol) {
+    const active = sort === col
+    const nextDir = active && dir === 'desc' ? 'asc' : 'desc'
+    const params = new URLSearchParams()
+    if (q) params.set('q', q)
+    if (status) params.set('status', status)
+    params.set('sort', col)
+    params.set('dir', nextDir)
+    return `/dashboard/projects?${params.toString()}`
+  }
+
+  function SortIcon({ col }: { col: SortCol }) {
+    if (sort !== col) return <ChevronsUpDown size={12} className="ml-1 inline text-ink-muted/40" />
+    return dir === 'asc'
+      ? <ChevronUp size={12} className="ml-1 inline text-gold" />
+      : <ChevronDown size={12} className="ml-1 inline text-gold" />
+  }
+
+  const COLS: { label: string; col: SortCol }[] = [
+    { label: 'Title', col: 'title' },
+    { label: 'Status', col: 'status' },
+    { label: 'Company', col: 'company' },
+    { label: 'Shoot Date', col: 'shoot_date' },
+    { label: 'Value', col: 'value' },
+  ]
 
   return (
     <div className="flex h-full flex-col">
@@ -75,6 +135,8 @@ export default async function ProjectsPage({ searchParams }: Props) {
           const params = new URLSearchParams()
           if (tab.value) params.set('status', tab.value)
           if (q) params.set('q', q)
+          if (sort !== 'shoot_date') params.set('sort', sort)
+          if (dir !== 'desc') params.set('dir', dir)
           const href = `/dashboard/projects${params.size > 0 ? `?${params}` : ''}`
           return (
             <Link
@@ -96,6 +158,8 @@ export default async function ProjectsPage({ searchParams }: Props) {
       <div className="border-b border-line px-8 py-4">
         <form>
           {status && <input type="hidden" name="status" value={status} />}
+          {sort !== 'shoot_date' && <input type="hidden" name="sort" value={sort} />}
+          {dir !== 'desc' && <input type="hidden" name="dir" value={dir} />}
           <div className="relative max-w-sm">
             <Search
               size={14}
@@ -117,12 +181,15 @@ export default async function ProjectsPage({ searchParams }: Props) {
           <table className="w-full">
             <thead>
               <tr className="border-b border-line">
-                {['Title', 'Status', 'Company', 'Shoot Date', 'Value'].map((col) => (
-                  <th
-                    key={col}
-                    className="pb-3 text-left text-caption font-medium text-ink-muted"
-                  >
-                    {col}
+                {COLS.map(({ label, col }) => (
+                  <th key={col} className="pb-3 text-left text-caption font-medium text-ink-muted">
+                    <Link
+                      href={headerLink(col)}
+                      className="inline-flex items-center transition-colors hover:text-ink-primary"
+                    >
+                      {label}
+                      <SortIcon col={col} />
+                    </Link>
                   </th>
                 ))}
               </tr>
@@ -147,9 +214,16 @@ export default async function ProjectsPage({ searchParams }: Props) {
                     <ProjectStatusBadge status={project.status} />
                   </td>
                   <td className="py-3 pr-4">
-                    <span className="text-caption text-ink-secondary">
-                      {project.companies?.name ?? '—'}
-                    </span>
+                    {project.companies ? (
+                      <Link
+                        href={`/dashboard/companies/${project.company_id}`}
+                        className="text-caption text-ink-secondary transition-colors hover:text-gold"
+                      >
+                        {project.companies.name}
+                      </Link>
+                    ) : (
+                      <span className="text-caption text-ink-secondary">—</span>
+                    )}
                   </td>
                   <td className="py-3 pr-4">
                     <span className="text-caption text-ink-secondary">

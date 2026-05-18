@@ -280,9 +280,12 @@ export default function ProjectDetail({ project, companies, allContacts }: Props
                   className="flex items-center justify-between rounded-token-md px-3 py-2.5 transition-colors hover:bg-bg-hover/60"
                 >
                   <div>
-                    <p className="text-caption font-medium text-ink-primary">
+                    <Link
+                      href={`/dashboard/contacts/${pc.contact_id}`}
+                      className="text-caption font-medium text-ink-primary transition-colors hover:text-gold"
+                    >
                       {pc.contacts.first_name} {pc.contacts.last_name}
-                    </p>
+                    </Link>
                     {pc.role && (
                       <p className="mt-0.5 text-ink-muted" style={{ fontSize: '11px' }}>{pc.role}</p>
                     )}

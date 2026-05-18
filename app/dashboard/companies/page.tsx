@@ -1,18 +1,32 @@
 import Link from 'next/link'
-import { Plus, Search, Building2 } from 'lucide-react'
+import { Plus, Search, Building2, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { requireUser } from '@/lib/supabase/auth'
 import { createServerClient } from '@/lib/supabase/server'
 import type { Company } from '@/lib/supabase/database.types'
 
+type SortCol = 'name' | 'industry' | 'website' | 'added'
+type SortDir = 'asc' | 'desc'
+
+const DB_SORT: Record<SortCol, string> = {
+  name: 'name',
+  industry: 'industry',
+  website: 'website',
+  added: 'created_at',
+}
+
 interface Props {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; sort?: string; dir?: string }>
 }
 
 export default async function CompaniesPage({ searchParams }: Props) {
   const user = await requireUser()
 
-  const { q: rawQ } = await searchParams
+  const { q: rawQ, sort: rawSort, dir: rawDir } = await searchParams
   const q = rawQ?.trim() ?? ''
+  const sort: SortCol = (['name', 'industry', 'website', 'added'] as SortCol[]).includes(rawSort as SortCol)
+    ? (rawSort as SortCol)
+    : 'name'
+  const dir: SortDir = rawDir === 'desc' ? 'desc' : 'asc'
 
   let companies: Company[] = []
 
@@ -23,7 +37,7 @@ export default async function CompaniesPage({ searchParams }: Props) {
       .from('companies')
       .select('*')
       .eq('user_id', user.id)
-      .order('name')
+      .order(DB_SORT[sort], { ascending: dir === 'asc' })
 
     if (q) {
       query = query.or(`name.ilike.%${q}%,industry.ilike.%${q}%`)
@@ -33,6 +47,30 @@ export default async function CompaniesPage({ searchParams }: Props) {
     if (error) throw error
     companies = data ?? []
   }
+
+  function headerLink(col: SortCol) {
+    const active = sort === col
+    const nextDir = active && dir === 'asc' ? 'desc' : 'asc'
+    const params = new URLSearchParams()
+    if (q) params.set('q', q)
+    params.set('sort', col)
+    params.set('dir', nextDir)
+    return `/dashboard/companies?${params.toString()}`
+  }
+
+  function SortIcon({ col }: { col: SortCol }) {
+    if (sort !== col) return <ChevronsUpDown size={12} className="ml-1 inline text-ink-muted/40" />
+    return dir === 'asc'
+      ? <ChevronUp size={12} className="ml-1 inline text-gold" />
+      : <ChevronDown size={12} className="ml-1 inline text-gold" />
+  }
+
+  const COLS: { label: string; col: SortCol }[] = [
+    { label: 'Name', col: 'name' },
+    { label: 'Industry', col: 'industry' },
+    { label: 'Website', col: 'website' },
+    { label: 'Added', col: 'added' },
+  ]
 
   return (
     <div className="flex h-full flex-col">
@@ -68,6 +106,8 @@ export default async function CompaniesPage({ searchParams }: Props) {
               placeholder="Search by name or industry…"
               className="w-full rounded-token-md border border-line bg-bg-card py-2 pl-9 pr-4 text-caption text-ink-primary placeholder:text-ink-muted transition-colors focus:border-gold/40 focus:outline-none focus:ring-1 focus:ring-gold/20"
             />
+            {sort !== 'name' && <input type="hidden" name="sort" value={sort} />}
+            {dir !== 'asc' && <input type="hidden" name="dir" value={dir} />}
           </div>
         </form>
       </div>
@@ -78,12 +118,15 @@ export default async function CompaniesPage({ searchParams }: Props) {
           <table className="w-full">
             <thead>
               <tr className="border-b border-line">
-                {['Name', 'Industry', 'Website', 'Added'].map((col) => (
-                  <th
-                    key={col}
-                    className="pb-3 text-left text-caption font-medium text-ink-muted"
-                  >
-                    {col}
+                {COLS.map(({ label, col }) => (
+                  <th key={col} className="pb-3 text-left text-caption font-medium text-ink-muted">
+                    <Link
+                      href={headerLink(col)}
+                      className="inline-flex items-center transition-colors hover:text-ink-primary"
+                    >
+                      {label}
+                      <SortIcon col={col} />
+                    </Link>
                   </th>
                 ))}
               </tr>
