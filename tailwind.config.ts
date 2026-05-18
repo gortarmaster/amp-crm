@@ -20,9 +20,9 @@ const config: Config = {
           muted: "#57534e",
         },
         gold: {
-          DEFAULT: "#c9a96e",
-          light: "#dfc08a",
-          dark: "#a8874e",
+          DEFAULT: "#D4622A",
+          light: "#E8783E",
+          dark: "#B04E1E",
         },
         line: {
           subtle: "#262626",
@@ -62,8 +62,8 @@ const config: Config = {
           "100%": { opacity: "1" },
         },
         pulseGold: {
-          "0%, 100%": { boxShadow: "0 0 0 0 rgba(201, 169, 110, 0.4)" },
-          "50%": { boxShadow: "0 0 0 8px rgba(201, 169, 110, 0)" },
+          "0%, 100%": { boxShadow: "0 0 0 0 rgba(212, 98, 42, 0.4)" },
+          "50%": { boxShadow: "0 0 0 8px rgba(212, 98, 42, 0)" },
         },
       },
     },

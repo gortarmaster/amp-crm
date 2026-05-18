@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getUser } from '@/lib/supabase/auth'
 import { createServerClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/dashboard/Sidebar'
+import MobileNav from '@/components/dashboard/MobileNav'
 
 export default async function DashboardLayout({
   children,
@@ -32,12 +33,16 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg-base">
-      <Sidebar
-        userEmail={userEmail}
-        userName={userName}
-        userAvatar={userAvatar}
-      />
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      {/* Desktop sidebar */}
+      <div className="hidden md:flex">
+        <Sidebar userEmail={userEmail} userName={userName} userAvatar={userAvatar} />
+      </div>
+
+      {/* Right side: mobile top bar + main content */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <MobileNav userEmail={userEmail} userName={userName} userAvatar={userAvatar} />
+        <main className="flex-1 overflow-y-auto">{children}</main>
+      </div>
     </div>
   )
 }
