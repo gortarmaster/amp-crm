@@ -37,9 +37,6 @@ export function buildInviteEmail(baseUrl: string): string {
               <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#a8a29e;">
                 I put together a short survey &mdash; 5 chapters, about 5 minutes &mdash; that walks through your tools, your booking flow, how you handle money, and where the friction is.
               </p>
-              <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#a8a29e;">
-                No generic intake form. Just the stuff I actually need to build something that fits the way you already operate.
-              </p>
               <p style="margin:0 0 36px;font-size:16px;line-height:1.7;color:#a8a29e;">
                 Your answers come straight to me. Takes about 5 minutes.
               </p>

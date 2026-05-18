@@ -16,13 +16,11 @@ export default function IntroScreen({ name, onStart }: Props) {
         <h1 className="mb-4 text-[2.25rem] font-bold leading-tight tracking-tight text-ink-primary">
           {greeting} let&apos;s map out your workflow.
         </h1>
-        <p className="mb-3 text-body text-ink-muted leading-relaxed">
-          This short survey helps me understand how you run your business today — your tools,
-          your pain points, and what you care about most.
-        </p>
         <p className="mb-10 text-body text-ink-muted leading-relaxed">
-          It takes about <span className="text-ink-secondary font-medium">5 minutes</span> and
-          everything you share goes straight to me. No spam, no pitch decks.
+          This short survey helps me understand how you run your business today — your tools,
+          your pain points, and what you care about most. Takes about{' '}
+          <span className="text-ink-secondary font-medium">5 minutes</span> and everything
+          goes straight to me.
         </p>
 
         <button
