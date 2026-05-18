@@ -93,6 +93,80 @@ export interface Database {
         }
         Relationships: []
       }
+      projects: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          status: string
+          company_id: string | null
+          deal_value: number | null
+          internal_notes: string | null
+          shoot_date: string | null
+          delivery_date: string | null
+          slug: string
+          description: string | null
+          location: string | null
+          category: string | null
+          year: number | null
+          portfolio_visible: boolean
+          client_gallery_enabled: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          status?: string
+          company_id?: string | null
+          deal_value?: number | null
+          internal_notes?: string | null
+          shoot_date?: string | null
+          delivery_date?: string | null
+          slug: string
+          description?: string | null
+          location?: string | null
+          category?: string | null
+          year?: number | null
+          portfolio_visible?: boolean
+          client_gallery_enabled?: boolean
+        }
+        Update: {
+          title?: string
+          status?: string
+          company_id?: string | null
+          deal_value?: number | null
+          internal_notes?: string | null
+          shoot_date?: string | null
+          delivery_date?: string | null
+          description?: string | null
+          location?: string | null
+          category?: string | null
+          year?: number | null
+          portfolio_visible?: boolean
+          client_gallery_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      project_contacts: {
+        Row: {
+          project_id: string
+          contact_id: string
+          role: string | null
+          added_at: string
+        }
+        Insert: {
+          project_id: string
+          contact_id: string
+          role?: string | null
+        }
+        Update: {
+          role?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -112,4 +186,83 @@ export type ContactUpdate = Database['public']['Tables']['contacts']['Update']
 // Contact with joined company
 export type ContactWithCompany = Contact & {
   companies: Pick<Company, 'id' | 'name'> | null
+}
+
+// Projects
+export type ProjectStatus = 'lead' | 'booked' | 'shooting' | 'editing' | 'delivered' | 'archived'
+
+export type Project = {
+  id: string
+  user_id: string
+  title: string
+  status: ProjectStatus
+  company_id: string | null
+  deal_value: number | null
+  internal_notes: string | null
+  shoot_date: string | null
+  delivery_date: string | null
+  slug: string
+  description: string | null
+  location: string | null
+  category: string | null
+  year: number | null
+  portfolio_visible: boolean
+  client_gallery_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type ProjectInsert = {
+  user_id: string
+  title: string
+  status?: ProjectStatus
+  company_id?: string | null
+  deal_value?: number | null
+  internal_notes?: string | null
+  shoot_date?: string | null
+  delivery_date?: string | null
+  slug: string
+  description?: string | null
+  location?: string | null
+  category?: string | null
+  year?: number | null
+  portfolio_visible?: boolean
+  client_gallery_enabled?: boolean
+}
+
+export type ProjectUpdate = {
+  title?: string
+  status?: ProjectStatus
+  company_id?: string | null
+  deal_value?: number | null
+  internal_notes?: string | null
+  shoot_date?: string | null
+  delivery_date?: string | null
+  description?: string | null
+  location?: string | null
+  category?: string | null
+  year?: number | null
+  portfolio_visible?: boolean
+  client_gallery_enabled?: boolean
+  updated_at?: string
+}
+
+export type ProjectContact = {
+  project_id: string
+  contact_id: string
+  role: string | null
+  added_at: string
+}
+
+export type ProjectWithCompany = Project & {
+  companies: { id: string; name: string } | null
+}
+
+export type ProjectWithDetails = Project & {
+  companies: { id: string; name: string } | null
+  project_contacts: Array<{
+    contact_id: string
+    role: string | null
+    contacts: { id: string; first_name: string; last_name: string; email: string | null }
+  }>
 }
