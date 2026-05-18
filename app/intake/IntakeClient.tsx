@@ -31,6 +31,7 @@ export default function IntakePage() {
   const searchParams = useSearchParams()
   const nameParam = searchParams.get('name') ?? undefined
   const isResume = searchParams.get('resume') === '1'
+  const isPreview = searchParams.get('preview') === '1'
 
   const [step, setStep] = useState<Step>(0)
   const [answers, setAnswers] = useState<Partial<IntakeAnswers>>({})
@@ -40,17 +41,19 @@ export default function IntakePage() {
   const [, startTransition] = useTransition()
   const [submitting, setSubmitting] = useState(false)
 
-  // Patch answers, persisting draft to localStorage
   const patch = useCallback((p: Partial<IntakeAnswers>) => {
     setAnswers((prev) => {
       const next = { ...prev, ...p }
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch { /* ignore */ }
+      if (!isPreview) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch { /* ignore */ }
+      }
       return next
     })
-  }, [])
+  }, [isPreview])
 
-  // On mount: check auth and handle resume
   useEffect(() => {
+    if (isPreview) return // skip auth + resume logic entirely in preview mode
+
     const supabase = createBrowserClient()
 
     async function init() {
@@ -60,13 +63,11 @@ export default function IntakePage() {
         setUser({ email: sbUser.email ?? '', name: sbUser.user_metadata?.full_name ?? sbUser.user_metadata?.name ?? null })
 
         if (isResume) {
-          // Restore draft from localStorage
           try {
             const raw = localStorage.getItem(STORAGE_KEY)
             if (raw) setAnswers(JSON.parse(raw))
           } catch { /* ignore */ }
 
-          // Fetch existing DB record
           try {
             const res = await fetch('/api/intake/save')
             const json = await res.json()
@@ -80,11 +81,9 @@ export default function IntakePage() {
             }
           } catch { /* ignore */ }
 
-          // No DB record yet — resume to chapter 2 with localStorage draft
           setStep(2)
         }
       } else if (isResume) {
-        // OAuth redirected back but no session — go to intro
         try {
           const raw = localStorage.getItem(STORAGE_KEY)
           if (raw) setAnswers(JSON.parse(raw))
@@ -93,9 +92,10 @@ export default function IntakePage() {
     }
 
     init()
-  }, [isResume])
+  }, [isResume, isPreview])
 
   async function saveChapter(chapterNum: number, chapterAnswers: Partial<IntakeAnswers>) {
+    if (isPreview) return
     setSaving(true)
     try {
       await fetch('/api/intake/save', {
@@ -116,14 +116,12 @@ export default function IntakePage() {
     if (step >= 1 && step <= 5) {
       const currentChapter = step as number
 
-      if (currentChapter === 1 && !user) {
-        // Save draft locally before OAuth
+      if (currentChapter === 1 && !user && !isPreview) {
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(answers)) } catch { /* ignore */ }
         setShowAuthModal(true)
         return
       }
 
-      // Save this chapter's answers to DB
       startTransition(() => {
         saveChapter(currentChapter, answers)
       })
@@ -144,6 +142,10 @@ export default function IntakePage() {
   }
 
   async function handleSubmit() {
+    if (isPreview) {
+      setStep(7)
+      return
+    }
     setSubmitting(true)
     try {
       await fetch('/api/intake/submit', { method: 'POST' })
@@ -159,7 +161,7 @@ export default function IntakePage() {
   }
 
   if (step === 7) {
-    return <SuccessScreen name={user?.name ?? undefined} />
+    return <SuccessScreen name={isPreview ? 'Andres' : (user?.name ?? undefined)} />
   }
 
   if (step === 6) {
@@ -177,6 +179,14 @@ export default function IntakePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      {/* Preview banner */}
+      {isPreview && (
+        <div className="flex items-center justify-center gap-2 bg-gold/10 px-4 py-2 text-center">
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-gold">Preview mode</span>
+          <span className="text-[11px] text-ink-muted">— nothing is saved · auth is skipped</span>
+        </div>
+      )}
+
       {/* Top bar */}
       <header className="flex items-center justify-between border-b border-line px-6 py-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -229,8 +239,8 @@ export default function IntakePage() {
         </div>
       </div>
 
-      {/* Google sign-in modal */}
-      {showAuthModal && (
+      {/* Google sign-in modal — never shown in preview */}
+      {showAuthModal && !isPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg-base/80 backdrop-blur-sm px-6">
           <div className="w-full max-w-sm rounded-token-lg border border-line bg-bg-card p-8 text-center shadow-xl">
             <div className="mb-4 text-3xl">🔒</div>
