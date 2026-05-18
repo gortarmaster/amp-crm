@@ -167,6 +167,26 @@ export interface Database {
         }
         Relationships: []
       }
+      project_sources: {
+        Row: {
+          id: string
+          project_id: string
+          label: string
+          url: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          label: string
+          url?: string | null
+        }
+        Update: {
+          label?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -258,6 +278,14 @@ export type ProjectWithCompany = Project & {
   companies: { id: string; name: string } | null
 }
 
+export type ProjectSource = {
+  id: string
+  project_id: string
+  label: string
+  url: string | null
+  created_at: string
+}
+
 export type ProjectWithDetails = Project & {
   companies: { id: string; name: string } | null
   project_contacts: Array<{
@@ -265,4 +293,5 @@ export type ProjectWithDetails = Project & {
     role: string | null
     contacts: { id: string; first_name: string; last_name: string; email: string | null }
   }>
+  project_sources: ProjectSource[]
 }

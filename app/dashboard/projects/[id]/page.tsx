@@ -21,7 +21,7 @@ export default async function ProjectPage({ params }: Props) {
 
   const { data: project } = await supabase
     .from('projects')
-    .select('*, companies(id, name), project_contacts(contact_id, role, contacts(id, first_name, last_name, email))')
+    .select('*, companies(id, name), project_contacts(contact_id, role, contacts(id, first_name, last_name, email)), project_sources(id, label, url, created_at)')
     .eq('id', id)
     .eq('user_id', user!.id)
     .single()

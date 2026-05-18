@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Edit2, Trash2, Users, X, MapPin, Tag, DollarSign, Calendar } from 'lucide-react'
+import { Edit2, Trash2, Users, X, MapPin, Tag, DollarSign, Calendar, ExternalLink } from 'lucide-react'
 import {
   updateProject,
   deleteProject,
@@ -377,6 +377,34 @@ export default function ProjectDetail({ project, companies, allContacts }: Props
             )}
           </div>
         </div>
+
+        {/* Sources */}
+        {project.project_sources.length > 0 && (
+          <div className="mt-6">
+            <h2 className="mb-3 text-caption font-semibold uppercase tracking-widest text-ink-muted">
+              Sources
+            </h2>
+            <div className="space-y-1.5">
+              {project.project_sources.map((source) => (
+                <div key={source.id}>
+                  {source.url ? (
+                    <a
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-caption text-gold transition-colors hover:text-gold-light"
+                    >
+                      <ExternalLink size={11} strokeWidth={1.5} className="flex-shrink-0" />
+                      {source.label}
+                    </a>
+                  ) : (
+                    <p className="text-caption text-ink-secondary">{source.label}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Metadata */}
         <div className="mt-6 space-y-2">
