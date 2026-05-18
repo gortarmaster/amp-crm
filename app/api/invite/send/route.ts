@@ -5,11 +5,11 @@ import { buildInviteEmail } from '@/lib/invite/email'
 
 export async function POST(req: NextRequest) {
   const { origin } = new URL(req.url)
-  const to = process.env.ANDRES_EMAIL
-
-  if (!to) {
+  const raw = process.env.ANDRES_EMAIL
+  if (!raw) {
     return NextResponse.json({ ok: false, error: 'ANDRES_EMAIL env var not set' }, { status: 500 })
   }
+  const to = raw.split(',').map((e) => e.trim()).filter(Boolean)
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
