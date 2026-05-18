@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Users, Building2, FolderOpen, Mail, FileText } from 'lucide-react'
+import { Users, Building2, FolderOpen, Mail, FileText, Send } from 'lucide-react'
 import SignOutButton from './SignOutButton'
 
 const NAV_ITEMS = [
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/projects', label: 'Projects', icon: FolderOpen },
   { href: '/dashboard/sequences', label: 'Sequences', icon: Mail },
   { href: '/dashboard/templates', label: 'Templates', icon: FileText },
+  { href: '/dashboard/invite', label: 'Invite', icon: Send },
 ]
 
 interface Props {
