@@ -25,6 +25,28 @@ export interface Database {
         }
         Relationships: []
       }
+      invite_events: {
+        Row: {
+          id: string
+          event_type: 'sent' | 'opened' | 'clicked'
+          occurred_at: string
+          user_agent: string | null
+          ip: string | null
+        }
+        Insert: {
+          id?: string
+          event_type: 'sent' | 'opened' | 'clicked'
+          occurred_at?: string
+          user_agent?: string | null
+          ip?: string | null
+        }
+        Update: {
+          event_type?: 'sent' | 'opened' | 'clicked'
+          user_agent?: string | null
+          ip?: string | null
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           id: string
