@@ -37,9 +37,9 @@ export default function ContactDetail({ contact, companies, projects }: Props) {
   }
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden">
       {/* Left — contact info */}
-      <div className="flex-1 overflow-y-auto border-r border-line px-8 py-6">
+      <div className="flex-1 border-b border-line px-5 py-6 md:overflow-y-auto md:border-b-0 md:border-r md:px-8">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-caption font-semibold uppercase tracking-widest text-ink-muted">
             Contact Info
@@ -65,7 +65,7 @@ export default function ContactDetail({ contact, companies, projects }: Props) {
 
         {editing ? (
           <form action={handleUpdate} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <EditField label="First Name" name="first_name" defaultValue={contact.first_name} required />
               <EditField label="Last Name" name="last_name" defaultValue={contact.last_name} required />
             </div>
@@ -184,7 +184,7 @@ export default function ContactDetail({ contact, companies, projects }: Props) {
       </div>
 
       {/* Right — notes + metadata */}
-      <div className="w-72 flex-shrink-0 overflow-y-auto px-6 py-6">
+      <div className="px-5 py-6 md:w-72 md:flex-shrink-0 md:overflow-y-auto md:px-6">
         <h2 className="mb-4 text-caption font-semibold uppercase tracking-widest text-ink-muted">
           Notes
         </h2>

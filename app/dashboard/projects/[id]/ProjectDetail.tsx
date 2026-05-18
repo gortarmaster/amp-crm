@@ -73,9 +73,9 @@ export default function ProjectDetail({ project, companies, allContacts }: Props
   const availableContacts = allContacts.filter((c) => !associatedContactIds.has(c.id))
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden">
       {/* Left — project info + contacts */}
-      <div className="flex-1 overflow-y-auto border-r border-line px-8 py-6">
+      <div className="flex-1 border-b border-line px-5 py-6 md:overflow-y-auto md:border-b-0 md:border-r md:px-8">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-caption font-semibold uppercase tracking-widest text-ink-muted">
             Project Info
@@ -103,7 +103,7 @@ export default function ProjectDetail({ project, companies, allContacts }: Props
           <form action={handleUpdate} className="space-y-4">
             <EditField label="Project Title" name="title" defaultValue={project.title} required />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-caption font-medium text-ink-secondary">
                   Status
@@ -151,12 +151,12 @@ export default function ProjectDetail({ project, companies, allContacts }: Props
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <EditField label="Shoot Date" name="shoot_date" type="date" defaultValue={project.shoot_date ?? ''} />
               <EditField label="Delivery Date" name="delivery_date" type="date" defaultValue={project.delivery_date ?? ''} />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <EditField label="Value ($)" name="deal_value" type="number" defaultValue={project.deal_value?.toString() ?? ''} placeholder="0" />
               <EditField label="Location" name="location" defaultValue={project.location ?? ''} placeholder="City, State" />
             </div>
@@ -335,7 +335,7 @@ export default function ProjectDetail({ project, companies, allContacts }: Props
       </div>
 
       {/* Right sidebar — CMS toggles, notes, metadata */}
-      <div className="w-72 flex-shrink-0 overflow-y-auto px-6 py-6">
+      <div className="px-5 py-6 md:w-72 md:flex-shrink-0 md:overflow-y-auto md:px-6">
         {/* Visibility toggles */}
         <h2 className="mb-4 text-caption font-semibold uppercase tracking-widest text-ink-muted">
           Visibility
